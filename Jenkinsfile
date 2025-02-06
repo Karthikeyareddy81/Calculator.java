@@ -1,10 +1,13 @@
 pipeline {
+    
     agent any
+    
     tools {
-        jdk 'jdk17'
-        maven 'maven3'
+      jdk 'Java17'
+      maven 'maven3'
     }
-     environment {
+
+    environment {
         APP_NAME = "calculator-pipeline"
         RELEASE = "1.0.0"
         DOCKER_USER = "karthikeyareddy716"
@@ -12,32 +15,44 @@ pipeline {
         IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
         IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
     }
+
     stages {
-        stage('Clone Repository') {
+        stage("Cleanup Workspace"){
             steps {
-                git 'https://github.com/Karthikeyareddy81/Calculator.java'
+              cleanWs()
             }
         }
-        stage('Build Application') {
+
+        stage("Checkout from Github"){
             steps {
-                sh './mvnw clean package -DskipTests'
+                git branch: 'main', credentialsId: 'git', url: 'https://github.com/Karthikeyareddy81/Calculator.java.git'
             }
         }
-        stage('Build Docker Image') {
+
+        stage("Build Application"){
+              steps {
+                  sh "mvn clean package"
+              }
+          }
+
+        stage("Test Application"){
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh "mvn test"
             }
         }
-        stage('Push Docker Image') {
+
+        
+        stage("Build & Push Docker Image"){
             steps {
-                withDockerRegistry([credentialsId: 'dockerhub', url: '']) {
-                    sh 'docker push $DOCKER_IMAGE'
+                script{
+                    docker.withRegistry('',DOCKER_PASS){
+                        docker_image = docker.build "${IMAGE_NAME}"
+                    }
+                    docker.withRegistry('',DOCKER_PASS){
+                        docker_image.push("${IMAGE_TAG}")
+                        docker_image.push('latest')
+                    }
                 }
-            }
-        }
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh 'kubectl apply -f k8s/deployment.yaml'
             }
         }
     }
