@@ -13,7 +13,7 @@ pipeline {
             steps {
                 script {
                     echo "Checking out source code..."
-                    git branch: 'main', url: 'https://github.com/Karthikeyareddy81/calculator-app.git' 
+                    git branch: 'main', url: 'https://github.com/Karthikeyareddy81/Calculator.java.git' 
                 }
             }
         }
