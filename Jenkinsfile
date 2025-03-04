@@ -5,7 +5,7 @@ pipeline {
         DOCKER_IMAGE = "my-app"
         REGISTRY = "karthikeyareddy716"
         BUILD_TAG = "${env.BUILD_NUMBER}"
-        TOMCAT_WEBAPPS = "/opt/tomcat/webapps"
+        TOMCAT_WEBAPPS = "/opt/tomcat9/webapps"
         DOCKER_USERNAME = credentials('docker-hub-cred')  // Store in Jenkins credentials
         DOCKER_PASSWORD = credentials('docker-hub-cred')  // Store in Jenkins credentials
     }
