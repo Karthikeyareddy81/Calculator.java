@@ -1,17 +1,18 @@
-# Use a base image with JDK
+# Use an OpenJDK base image
 FROM openjdk:11
 
-# Set working directory inside the container
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy all files to the container
-COPY . /app
+# Copy only Java files first to leverage Docker caching
+COPY CalculatorJava/*.java ./CalculatorJava/
 
-# Debugging: Check if files exist
-RUN ls -R /app
-
-# Compile the Java application
+# Compile the Java program
 RUN javac CalculatorJava/Calculator.java
 
-# Command to run the Java application
+# Copy any remaining project files
+COPY . .
+
+# Run the Java application
 CMD ["java", "CalculatorJava.Calculator"]
+
