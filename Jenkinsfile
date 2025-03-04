@@ -6,8 +6,8 @@ pipeline {
         REGISTRY = "karthikeyareddy716"
         BUILD_TAG = "${env.BUILD_NUMBER}"
         TOMCAT_WEBAPPS = "/opt/tomcat/webapps"
-        DOCKER_USERNAME = credentials('docker-username')  // Store in Jenkins credentials
-        DOCKER_PASSWORD = credentials('docker-password')  // Store in Jenkins credentials
+        DOCKER_USERNAME = credentials('docker-hub-cred')  // Store in Jenkins credentials
+        DOCKER_PASSWORD = credentials('docker-hub-cred')  // Store in Jenkins credentials
     }
 
     stages {
