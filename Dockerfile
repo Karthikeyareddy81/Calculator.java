@@ -4,8 +4,11 @@ FROM openjdk:11
 # Set working directory inside the container
 WORKDIR /app
 
-# Copy all Java source files to the container
+# Copy all files to the container
 COPY . /app
+
+# Debugging: Check if files exist
+RUN ls -R /app
 
 # Compile the Java application
 RUN javac CalculatorJava/Calculator.java
