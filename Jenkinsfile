@@ -1,59 +1,64 @@
 pipeline {
-    
-    agent any
-    
-    tools {
-      jdk 'Java17'
-      maven 'maven3'
-    }
+    agent { label 'Dev' }  // Use slave node
 
     environment {
-        APP_NAME = "calculator-pipeline"
-        RELEASE = "1.0.0"
-        DOCKER_USER = "karthikeyareddy716"
-        DOCKER_PASS = "dockerhub"
-        IMAGE_NAME = "${DOCKER_USER}" + "/" + "${APP_NAME}"
-        IMAGE_TAG = "${RELEASE}-${BUILD_NUMBER}"
+        DOCKER_IMAGE = "my-app"
+        REGISTRY = "karthikeyareddy716"  // Change this to your DockerHub or private registry
+        BUILD_TAG = "${env.BUILD_NUMBER}"
+        TOMCAT_WEBAPPS = "/opt/tomcat/webapps"  // Change this path based on your Tomcat setup
     }
 
     stages {
-        stage("Cleanup Workspace"){
+        stage('SCM Checkout') {
             steps {
-              cleanWs()
-            }
-        }
-
-        stage("Checkout from Github"){
-            steps {
-                git branch: 'main', credentialsId: 'git', url: 'https://github.com/Karthikeyareddy81/Calculator.java.git'
-            }
-        }
-
-        stage("Build Application"){
-              steps {
-                  sh "mvn clean package"
-              }
-          }
-
-        stage("Test Application"){
-            steps {
-                sh "mvn test"
-            }
-        }
-
-        
-        stage("Build & Push Docker Image"){
-            steps {
-                script{
-                    docker.withRegistry('',DOCKER_PASS){
-                        docker_image = docker.build "${IMAGE_NAME}"
-                    }
-                    docker.withRegistry('',DOCKER_PASS){
-                        docker_image.push("${IMAGE_TAG}")
-                        docker_image.push('latest')
-                    }
+                script {
+                    echo "Checking out source code..."
+                    git branch: 'main', url: 'https://github.com/your-repo/calculator-app.git' 
                 }
             }
+        }
+
+        stage('Maven Build') {
+            steps {
+                script {
+                    echo "Building with Maven..."
+                    sh 'mvn clean package -DskipTests'
+                    sh 'mv target/*.war target/app-${BUILD_TAG}.war'  // Rename artifact with build number
+                }
+            }
+        }
+
+        stage('Deploy to Tomcat') {
+            steps {
+                script {
+                    echo "Deploying to Tomcat..."
+                    sh "cp target/app-${BUILD_TAG}.war ${TOMCAT_WEBAPPS}/app.war"
+                }
+            }
+        }
+
+        stage('Docker Build & Push') {
+            steps {
+                script {
+                    echo "Building Docker image..."
+                    sh "docker build -t ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_TAG} ."
+
+                    echo "Logging into Docker registry..."
+                    sh "echo '${DOCKER_PASSWORD}' | docker login -u '${DOCKER_USERNAME}' --password-stdin"
+
+                    echo "Pushing Docker image to registry..."
+                    sh "docker push ${REGISTRY}/${DOCKER_IMAGE}:${BUILD_TAG}"
+                }
+            }
+        }
+    }
+
+    post {
+        success {
+            echo "Build and deployment successful!"
+        }
+        failure {
+            echo "Build failed. Check logs for details."
         }
     }
 }
