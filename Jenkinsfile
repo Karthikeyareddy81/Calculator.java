@@ -1,11 +1,13 @@
 pipeline {
-    agent { label 'Dev' }  // Use slave node
+    agent { label 'Dev' }  // Run on a specific slave node
 
     environment {
         DOCKER_IMAGE = "my-app"
-        REGISTRY = "karthikeyareddy716"  // Change this to your DockerHub or private registry
+        REGISTRY = "karthikeyareddy716"
         BUILD_TAG = "${env.BUILD_NUMBER}"
-        TOMCAT_WEBAPPS = "/opt/tomcat/webapps"  // Change this path based on your Tomcat setup
+        TOMCAT_WEBAPPS = "/opt/tomcat/webapps"
+        DOCKER_USERNAME = credentials('docker-username')  // Store in Jenkins credentials
+        DOCKER_PASSWORD = credentials('docker-password')  // Store in Jenkins credentials
     }
 
     stages {
@@ -13,7 +15,7 @@ pipeline {
             steps {
                 script {
                     echo "Checking out source code..."
-                    git branch: 'main', url: 'https://github.com/Karthikeyareddy81/Calculator.java.git' 
+                    git branch: 'main', url: 'https://github.com/Karthikeyareddy81/Calculator.java.git'
                 }
             }
         }
@@ -23,7 +25,7 @@ pipeline {
                 script {
                     echo "Building with Maven..."
                     sh 'mvn clean package -DskipTests'
-                    sh 'mv target/*.war target/app-${BUILD_TAG}.war'  // Rename artifact with build number
+                    sh "mv target/*.war target/app-${BUILD_TAG}.war"
                 }
             }
         }
@@ -32,7 +34,8 @@ pipeline {
             steps {
                 script {
                     echo "Deploying to Tomcat..."
-                    sh "cp target/app-${BUILD_TAG}.war ${TOMCAT_WEBAPPS}/app.war"
+                    sh "sudo cp target/app-${BUILD_TAG}.war ${TOMCAT_WEBAPPS}/app.war"
+                    sh "sudo systemctl restart tomcat"
                 }
             }
         }
