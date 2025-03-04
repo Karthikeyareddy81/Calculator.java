@@ -1,10 +1,10 @@
-# Use OpenJDK as the base image
-FROM openjdk:17
+# Use a base image with JDK
+FROM openjdk:11
 
-# Set the working directory inside the container
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy the Java source files into the container
+# Copy all Java source files to the container
 COPY . /app
 
 # Compile the Java application
