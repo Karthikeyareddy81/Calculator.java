@@ -35,7 +35,7 @@ pipeline {
                 script {
                     echo "Deploying to Tomcat..."
                     sh "sudo cp target/app-${BUILD_TAG}.war ${TOMCAT_WEBAPPS}/app.war"
-                    sh "sudo systemctl restart tomcat"
+                    
                 }
             }
         }
